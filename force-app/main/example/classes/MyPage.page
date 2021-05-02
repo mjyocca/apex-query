@@ -1,0 +1,41 @@
+<apex:page controller="Example">
+  <script>
+    const datejSON = JSON.stringify({
+      options: {
+        securityEnforced: false,
+        stripInaccessible: true,
+        AccessType: "CREATABLE"
+      },
+      fields: ["Id", "Name", "AnnualRevenue", "CreatedDate"],
+      sobjectname: "Account",
+      condition: {
+        filters: [
+          { fieldName: 'CreatedDate', operator: '<=', value: new Date()}
+        ]
+      },
+      subQueries: [
+        {
+          sObjectName: "Contacts",
+          fields: ["Id", "Name"],
+          condition: {
+            filters: [
+              { fieldName: "LeadSource", operator: "=", value: "Web" },
+              { fieldName: "Name", operator: "=", value: "Jack Rogers" },
+              { fieldName: "Email", operator: "!=", value: null }
+            ],
+            logic: "(1 OR 2) AND 3"
+          },
+          limitRows: 1
+        }
+      ],
+    })
+    Visualforce.remoting.Manager.invokeAction(
+      "{!$RemoteAction.Example.queryJSON}",
+      datejSON,
+      (result, event) => {
+        console.log({ result });
+      },
+      { escape: true }
+    );
+  </script>
+</apex:page>
