@@ -521,18 +521,20 @@ public inherited sharing class Query {
     return template;
   }
 
-  private static String getChildAPIName(String parentName, String pluralChild) {
-    String childAPIName = '';
+  private static Map<String, String> getChildAPIName(String parentName, String pluralChild) {
+    Map<String, String> apiNamePairing = new Map<String, String>();
     DescribeSObjectResult parentRes = describeSObject(parentName);
     for (ChildRelationship cr : parentRes.getChildRelationships()) {
       SObjectType type = cr.getChildSObject();
       DescribeSObjectResult typeRes = type.getDescribe();
-      if (typeRes.labelplural == pluralChild) {
-        childAPIName = typeRes.name;
+      // if passed in 'Contact' or 'Contacts' etc
+      if (typeRes.labelplural == pluralChild || typeRes.name == pluralChild) {
+        apiNamePairing.put('name', typeRes.name);
+        apiNamePairing.put('labelplural', typeRes.labelplural);
         break;
       }
     }
-    return childAPIName;
+    return apiNamePairing;
   }
 
   private List<String> getFilterParts(List<Filter> filters, Map<String, SObjectField> fMap) {
@@ -596,15 +598,15 @@ public inherited sharing class Query {
   private List<String> buildSubQuery() {
     List<String> subQuerys = new List<String>();
     for (SubQuery sq : this.subQueries) {
-      String sqSObjectApiName = getChildAPIName(
+      Map<String, String> sqObjectPair = getChildAPIName(
         this.sObjectName,
         sq.sObjectName
       );
-      Map<String, SObjectField> fMap = describeSObject(sqSObjectApiName)
+      Map<String, SObjectField> fMap = describeSObject(sqObjectPair.get('name'))
         .fields.getMap();
       List<String> subQueryParts = new List<String>();
       subQueryParts.add(String.join(getSelectParts(sq.fields), ', '));
-      subQueryParts.add(escape(sq.sObjectName));
+      subQueryParts.add(escape(sqObjectPair.get('labelplural')));
       String baseTemplate = '(SELECT {0} FROM {1}';
       if (sq.condition?.filters?.size() > 0) {
         baseTemplate += ' WHERE {2}';
