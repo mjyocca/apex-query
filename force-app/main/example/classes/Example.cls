@@ -12,8 +12,13 @@ public with sharing class Example {
       .fromSObject('Account')
       .fields(new List<String>{ 'Id', 'Name' })
       .whereFilter('ID', 'IN', accts)
+      .whereFilter('ParentId', 'IN', accts)
+      .whereLogic('OR')
       .limitRows(200)
       .run();
+      system.debug(accts.size());
+      system.debug(res.size());
+      System.debug(res);
   }
 
 

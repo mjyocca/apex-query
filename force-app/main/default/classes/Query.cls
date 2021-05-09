@@ -281,6 +281,25 @@ public inherited sharing class Query {
     @testVisible
     private SObjectAccessDecision securityDecision;
     /* */
+
+    /* 
+      100k query string limit, circumvent too many values in query string and use bind variables.
+      Not a scalable solution but the bind variables need to be declared where the query is run
+    */
+    @testVisible
+    private static final Integer BIND_SIZE = 20;
+    @testVisible
+    private Object bind1;
+    @testVisible
+    private Object bind2;
+    @testVisible
+    private Object bind3;
+    @testVisible
+    private Object bind4;
+    @testVisible
+    private Object bind5;
+    @testVisible
+    private Object bind6;
   
 
   /* Classes / Complex Data Structures */
@@ -478,7 +497,7 @@ public inherited sharing class Query {
     return isDateOrDateTime;
   }
 
-  private static Object setFilterValue(Object o) {
+  private Object setFilterValue(Object o) {
     Object returnVal;
     if (o == null || o == 'null') {
       returnVal = null;
@@ -755,7 +774,35 @@ public inherited sharing class Query {
     system.debug('FINAL_QUERY: ' + this.finalQuery);
   }
 
-  private static String inConditionHelper(List<Object> values) {
+  private String bindVariableHelper(Object passThrough) {
+    String bindStringValue = '';
+    if (bind1 == null) {
+      bind1 = passThrough;
+      bindStringValue = ':bind1';
+    } else if(bind2 == null) {
+      bind2 = passThrough;
+      bindStringValue = ':bind2';
+    } else if(bind3 == null) {
+      bind3 = passThrough;
+      bindStringValue = ':bind3';
+    } else if(bind4 == null) {
+      bind4 = passThrough;
+      bindStringValue = ':bind4';
+    } else if(bind5 == null) {
+      bind5 = passThrough;
+      bindStringValue = ':bind5';
+    } else if(bind6 == null) {
+      bind6 = passThrough;
+      bindStringValue = ':bind6';
+    }
+    return bindStringValue;
+  }
+
+  private String inConditionHelper(List<Object> values) {
+    // use bind variables
+    if (values?.size() > BIND_SIZE) {
+      return bindVariableHelper(values);
+    }
     if (values instanceOf String[]) {
       values = (List<Object>)escapeCollection((List<String>)values);
     }
@@ -766,7 +813,10 @@ public inherited sharing class Query {
       BRACKET_RIGHT;
   }
 
-  private static String inConditionHelper(List<Decimal> values) {
+  private String inConditionHelper(List<Decimal> values) {
+    if (values?.size() > BIND_SIZE) {
+      return bindVariableHelper(values);
+    }
     return BRACKET_LEFT + String.join(values, ', ') + BRACKET_RIGHT;
   }
 
