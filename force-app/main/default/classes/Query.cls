@@ -301,6 +301,20 @@ public inherited sharing class Query {
     @testVisible
     private Object bind6;
   
+    public class Bind {
+      public String var { get; set; }
+      
+      public Bind(String var) {
+        this.var= var;
+      }
+      
+      public String getName() {
+        if (!this.var?.startsWith(':')){
+          return ':' + this.var;
+        }
+        return this.var;
+      }
+    }
 
   /* Classes / Complex Data Structures */
   /* Public Instance member variables */
@@ -514,7 +528,10 @@ public inherited sharing class Query {
       returnVal = inConditionHelper(new List<Id>(sObjMap.keySet()));
     } else if (o instanceOf Object[]) {
       returnVal = inConditionHelper((List<Object>)o);
-    } else {
+    } else if (o instanceOf Bind) {
+      Bind b = (Bind)o;
+      returnVal = b.getName();
+    }  else {
       returnVal = o;
     }
     return returnVal;

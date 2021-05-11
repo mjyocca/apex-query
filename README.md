@@ -106,6 +106,27 @@ List<sObject> res = new Query()
     .run();
 ```
 
+#### toString Bind Variable Example
+
+*If your collection variable is longer than 20 items, and wish to get the compiled query string, make sure to make use of the `new Query.bind(':varName')`.
+
+```java
+Map<Id, sObject> accts = new Map<Id, sObject>([SELECT ID FROM Account]);
+// variable name declared here
+Set<Id> acctIds = accts.keySet();
+Query q = new Query()
+    .fromSObject('Account')
+    .fields(new List<String>{ 'Id', 'Name' })
+    // is passed in here
+    .whereFilter('ID', 'IN', new Query.bind(':acctIds'))
+    .limitRows(200);
+    for(Account sobj : Database.query(q.queryString())) {
+    // processing here
+    }
+}
+```
+
+
 #### SubQuery
 
 ```java
